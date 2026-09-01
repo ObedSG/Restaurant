@@ -1,0 +1,27 @@
+bin/
+obj/
+*.dll
+*.exe
+
+# Visual studio
+.vs/
+.vscode/
+*.user
+*.suo
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log 
+logs/
+
+# Enviroments
+.env 
+.env.local
