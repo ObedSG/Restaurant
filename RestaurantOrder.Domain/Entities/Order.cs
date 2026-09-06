@@ -1,5 +1,6 @@
 using System;
 using RestaurantOrder.Domain.Enums;
+using RestaurantOrder.Domain.Events;
 namespace RestaurantOrder.Domain.Entities;
 
 
@@ -19,6 +20,10 @@ public class Order
 
     public decimal TotalPrice { get; set; }
 
+
+    private readonly List<DomainEvent> _events = new();
+    public IReadOnlyList<DomainEvent> Events => _events.AsReadOnly();
+
     // End Properties
 
 
@@ -35,7 +40,7 @@ public class Order
         if (string.IsNullOrWhiteSpace(customerId))
             throw new ArgumentException("CustomerId cannot be null", nameof(customerId));
 
-        return new Order
+        var order = new Order
         {
             CustomerId = customerId,
             Status = OrderStatus.Pending,
@@ -44,6 +49,9 @@ public class Order
             TotalPrice = 0
 
         };
+        order._events.Add(new OrderCreatedEvent(order.Id));
+
+        return order;
 
     }
 
@@ -57,6 +65,7 @@ public class Order
             throw new InvalidOperationException($"Cannot confirm order. Current status: {Status}, expected: Pending");
         UpdateAt = DateTime.UtcNow;
 
+        _events.Add(new OrderConfirmedEvent(Id));
 
     }
 
@@ -67,6 +76,7 @@ public class Order
         else
             throw new InvalidOperationException($"Cannot start order. Current status: {Status}, expected: Confirmed");
         UpdateAt = DateTime.UtcNow;
+        _events.Add(new OrderPreparingEvent(Id));
 
 
     }
@@ -78,6 +88,8 @@ public class Order
         else
             throw new InvalidOperationException($"Cannot mark order. Current status: {Status}, expected: Preparing");
         UpdateAt = DateTime.UtcNow;
+        _events.Add(new OrderReadyEvent(Id));
+
 
 
     }
@@ -89,11 +101,16 @@ public class Order
         else
             throw new InvalidOperationException($"Cannot deliver order. Current status: {Status}, expected: Ready");
         UpdateAt = DateTime.UtcNow;
+        _events.Add(new OrderDeliveredEvent(Id));
+
 
     }
 
-    public void Cancel()
+    public void Cancel(string reason)
     {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Reason cannot be null", nameof(reason));
+
         if (Status == OrderStatus.Delivered || Status == OrderStatus.Cancelled)
             throw new InvalidOperationException($"Status cannot be status: {Status}");
 
@@ -101,7 +118,12 @@ public class Order
 
         UpdateAt = DateTime.UtcNow;
 
+        _events.Add(new OrderCancelledEvent(Id, reason));
+
+
     }
+
+    public void ClearEvents() => _events.Clear();
 
 
 
