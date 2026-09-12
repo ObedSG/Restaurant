@@ -24,12 +24,12 @@ public class OrderItem
     public static OrderItem Create(int menuItemId, string menuItemName, int quantity, decimal priceAtOrderTime)
     {
         if (string.IsNullOrWhiteSpace(menuItemName))
-            throw new ArgumentException("MenuItemName cannot be null", nameof(menuItemId));
+            throw new ArgumentException("MenuItemName cannot be null", nameof(menuItemName));
 
-        if (quantity < 0)
-            throw new ArgumentException("quantiry must be greater than 0", nameof(quantity));
+        if (quantity <= 0)
+            throw new ArgumentException("quantity must be greater than 0", nameof(quantity));
 
-        if (priceAtOrderTime < 0)
+        if (priceAtOrderTime <= 0)
             throw new ArgumentException("priceAtOrderTime must be greater than 0", nameof(priceAtOrderTime));
 
         return new OrderItem
@@ -41,5 +41,9 @@ public class OrderItem
         };
 
 
+    }
+    public decimal CalculateSubtotal()
+    {
+        return Quantity * PriceAtOrderTime;
     }
 }
